@@ -1,4 +1,3 @@
-# udp-custom
 # 🚀 UDP-CUSTOM INSTALLER
 
 Script auto install UDP-Custom + System Manager + Menu VPS
@@ -30,6 +29,5 @@ Script auto install UDP-Custom + System Manager + Menu VPS
 
 Run command below on your VPS:
 
-wget https://raw.githubusercontent.com/mandiriwe1/udp-custom/main/install.sh
-chmod +x install.sh
-bash install.sh
+```bash
+bash <(curl -s https://raw.githubusercontent.com/mandiriwe1/udp-custom/main/install.sh)
