@@ -1,166 +1,150 @@
 #!/bin/bash
 
-# ==========================================
-#            YHDS UDP MENU
-#         Creator : YHDS Developer
-# ==========================================
+# ===== COLOR =====
+RED="\e[31m"
+GREEN="\e[32m"
+YELLOW="\e[33m"
+BLUE="\e[34m"
+CYAN="\e[36m"
+WHITE="\e[97m"
+ENDCOLOR="\e[0m"
 
-# Color
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-WHITE='\033[1;37m'
-NC='\033[0m'
-
-# Root Check
-[[ $EUID -ne 0 ]] && {
-    echo -e "${RED}Please run as root!${NC}"
+# ===== ROOT CHECK =====
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}Please run as root!${ENDCOLOR}"
     exit 1
-}
+fi
 
-# Install Dependency
-for pkg in curl lolcat screenfetch; do
-    command -v $pkg >/dev/null 2>&1 || \
-    apt install -y $pkg >/dev/null 2>&1
-done
-
-# Get Public IP
+# ===== VPS INFO =====
 get_ip() {
-    curl -s --max-time 5 ipv4.icanhazip.com
+    wget -qO- https://ipecho.net/plain
 }
 
-# Get ISP
 get_isp() {
-    local isp
-    isp=$(curl -s --max-time 5 ipinfo.io/org | cut -d " " -f2-)
-    echo "${isp:-Unknown ISP}"
+    curl -s ipinfo.io/org | cut -d " " -f2-
 }
 
-# UDP Status
-get_udp_status() {
+get_ram() {
+    free -m | awk '/Mem:/ {print $3"MB / "$2"MB"}'
+}
+
+get_uptime() {
+    uptime -p | sed 's/up //'
+}
+
+get_udp_custom_status() {
     if systemctl is-active --quiet udp-custom; then
-        echo -e "${GREEN}● ONLINE${NC}"
+        echo -e "${GREEN}RUNNING${ENDCOLOR}"
     else
-        echo -e "${RED}● OFFLINE${NC}"
+        echo -e "${RED}OFFLINE${ENDCOLOR}"
     fi
 }
 
-# Header
+get_zivpn_status() {
+    if systemctl is-active --quiet zivpn; then
+        echo -e "${GREEN}RUNNING${ENDCOLOR}"
+    else
+        echo -e "${RED}OFFLINE${ENDCOLOR}"
+    fi
+}
+
+# ===== BANNER =====
 banner() {
     echo
-    echo -e "          ██╗   ██╗██╗  ██╗██████╗ ███████╗    ██╗   ██╗██████╗ ██████╗ " | lolcat
-    echo -e "          ╚██╗ ██╔╝██║  ██║██╔══██╗██╔════╝    ██║   ██║██╔══██╗██╔══██╗" | lolcat
-    echo -e "           ╚████╔╝ ███████║██║  ██║███████╗    ██║   ██║██║  ██║██████╔╝" | lolcat
-    echo -e "            ╚██╔╝  ██╔══██║██║  ██║╚════██║    ██║   ██║██║  ██║██╔═══╝ " | lolcat
-    echo -e "             ██║   ██║  ██║██████╔╝███████║    ╚██████╔╝██████╔╝██║     " | lolcat
-    echo -e "             ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝     ╚═════╝ ╚═════╝ ╚═╝     " | lolcat
+    echo -e "          ██╗   ██╗██╗  ██╗██████╗ ███████╗" | lolcat
+    echo -e "          ╚██╗ ██╔╝██║  ██║██╔══██╗██╔════╝" | lolcat
+    echo -e "           ╚████╔╝ ███████║██║  ██║███████╗" | lolcat
+    echo -e "            ╚██╔╝  ██╔══██║██║  ██║╚════██║" | lolcat
+    echo -e "             ██║   ██║  ██║██████╔╝███████║" | lolcat
+    echo -e "             ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝" | lolcat
     echo
 }
 
-# Menu
+# ===== MENU =====
 while true; do
 clear
 
 IP=$(get_ip)
 ISP=$(get_isp)
-UDP_STATUS=$(get_udp_status)
+RAM=$(get_ram)
+UPTIME=$(get_uptime)
+UDP_CUSTOM=$(get_udp_custom_status)
+ZIVPN=$(get_zivpn_status)
 
 banner
 
-echo -e "${YELLOW}══════════════════════════════════════════════${NC}"
-echo -e "${CYAN}              ⚡ YHDS UDP MENU ⚡${NC}"
-echo -e "${YELLOW}══════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════${ENDCOLOR}"
+echo -e "${CYAN}              ⚡ YHDS UDP MENU ⚡${ENDCOLOR}"
+echo -e "${YELLOW}══════════════════════════════════════════════${ENDCOLOR}"
 
-echo -e "${WHITE} VPS IP     : ${GREEN}${IP}${NC}"
-echo -e "${WHITE} ISP        : ${YELLOW}${ISP}${NC}"
-echo -e "${WHITE} UDP STATUS : ${UDP_STATUS}"
+echo -e "${WHITE} VPS IP         : ${GREEN}${IP}${ENDCOLOR}"
+echo -e "${WHITE} ISP            : ${YELLOW}${ISP}${ENDCOLOR}"
+echo -e "${WHITE} RAM STATUS     : ${CYAN}${RAM}${ENDCOLOR}"
+echo -e "${WHITE} UPTIME         : ${GREEN}${UPTIME}${ENDCOLOR}"
+echo -e "${WHITE} UDP CUSTOM     : ${UDP_CUSTOM}"
+echo -e "${WHITE} UDP ZIVPN      : ${ZIVPN}"
 echo
 
-echo -e "${YELLOW}      ╔══════════════════════════════════════╗${NC}"
-echo -e "${CYAN}      ║  1) Add New User                    ║${NC}"
-echo -e "${CYAN}      ║  2) View All Users                  ║${NC}"
-echo -e "${CYAN}      ║  3) Edit Existing User              ║${NC}"
-echo -e "${CYAN}      ║  4) Delete User                     ║${NC}"
-echo -e "${CYAN}      ║  5) Server Information              ║${NC}"
-echo -e "${CYAN}      ║  6) Torrent Blocker                 ║${NC}"
-echo -e "${CYAN}      ║  7) Remove Script                   ║${NC}"
-echo -e "${CYAN}      ║  8) About                           ║${NC}"
-echo -e "${CYAN}      ║  9) Restart UDP                     ║${NC}"
-echo -e "${CYAN}      ║  0) Exit                            ║${NC}"
-echo -e "${YELLOW}      ╚══════════════════════════════════════╝${NC}"
+echo -e "${YELLOW}╔════════════════════════════════════════════╗${ENDCOLOR}"
+echo -e "${CYAN}║ 1) Add New User                           ║${ENDCOLOR}"
+echo -e "${CYAN}║ 2) View All Users                         ║${ENDCOLOR}"
+echo -e "${CYAN}║ 3) Edit Existing User                     ║${ENDCOLOR}"
+echo -e "${CYAN}║ 4) Delete User                            ║${ENDCOLOR}"
+echo -e "${CYAN}║ 5) Server Information                     ║${ENDCOLOR}"
+echo -e "${CYAN}║ 6) Torrent Blocker                        ║${ENDCOLOR}"
+echo -e "${CYAN}║ 7) Remove Script                          ║${ENDCOLOR}"
+echo -e "${CYAN}║ 8) About                                  ║${ENDCOLOR}"
+echo -e "${CYAN}║ 9) Restart UDP Services                   ║${ENDCOLOR}"
+echo -e "${CYAN}║ 0) Exit                                   ║${ENDCOLOR}"
+echo -e "${YELLOW}╚════════════════════════════════════════════╝${ENDCOLOR}"
 
 echo
-echo -e "${BLUE}       ╔═══════════════════════════════════╗${NC}"
-echo -e "       ║      PROJECT YHDS DEVELOPER      ║" | lolcat
-echo -e "${WHITE}       ║      © 2019-2030 All Rights      ║${NC}"
-echo -e "${BLUE}       ╚════════════•⊱✦⊰•═════════════════╝${NC}"
+echo -e "${BLUE}═══════════════════════════════${ENDCOLOR}"
+echo -e "      PROJECT YHDS DEVELOPER" | lolcat
+echo -e "${WHITE}      © 2019-2030 All Rights${ENDCOLOR}"
+echo -e "${BLUE}═══════════════════════════════${ENDCOLOR}"
 echo
 
-read -rp " • Select Operation : " n
+echo -ne "${GREEN} • Select Operation : ${ENDCOLOR}"
+read n
 
 case $n in
-    1)
-        bash /etc/yhds/system/Adduser.sh
-    ;;
+1) /etc/yhds/system/Adduser.sh ;;
+2) /etc/yhds/system/Userlist.sh ;;
+3) /etc/yhds/system/ChangeUser.sh ;;
+4) /etc/yhds/system/DelUser.sh ;;
 
-    2)
-        bash /etc/yhds/system/Userlist.sh
-    ;;
+5)
+clear
+screenfetch -p || neofetch || hostnamectl
+read -p "Press Enter to return..."
+;;
 
-    3)
-        bash /etc/yhds/system/ChangeUser.sh
-    ;;
+6) /etc/yhds/system/torrent.sh ;;
+7) /etc/yhds/system/RemoveScript.sh ;;
 
-    4)
-        bash /etc/yhds/system/DelUser.sh
-    ;;
+8)
+clear
+echo "By Project YHDS Dev Team"
+read -p "Press Enter to return..."
+;;
 
-    5)
-        clear
-        screenfetch -p
-        echo
-        read -n 1 -s -r -p "Press any key to continue..."
-    ;;
+9)
+echo -e "${YELLOW}Restarting UDP Services...${ENDCOLOR}"
+systemctl restart udp-custom
+systemctl restart zivpn
+sleep 3
+;;
 
-    6)
-        bash /etc/yhds/system/torrent.sh
-    ;;
+0)
+clear
+exit
+;;
 
-    7)
-        bash /etc/yhds/system/RemoveScript.sh
-    ;;
-
-    8)
-        clear
-        echo -e "${GREEN}Project By YHDS Dev Team${NC}"
-        echo -e "${YELLOW}Version : 1.0${NC}"
-        echo
-        read -n 1 -s -r -p "Press any key to continue..."
-    ;;
-
-    9)
-        echo -e "${CYAN}Restarting UDP Custom...${NC}"
-        systemctl restart udp-custom
-
-        if systemctl is-active --quiet udp-custom; then
-            echo -e "${GREEN}✓ UDP Custom Restarted Successfully${NC}"
-        else
-            echo -e "${RED}✗ Failed Restart UDP Custom${NC}"
-        fi
-        sleep 2
-    ;;
-
-    0)
-        clear
-        exit
-    ;;
-
-    *)
-        echo -e "${RED}Invalid Option!${NC}"
-        sleep 1
-    ;;
+*)
+echo -e "${RED}Invalid Option!${ENDCOLOR}"
+sleep 2
+;;
 esac
 
 done
