@@ -28,7 +28,7 @@ echo
 sleep 3
 
 echo "[+] Setting timezone Sri Lanka"
-ln -fs /usr/share/zoneinfo/Asia/Colombo /etc/localtime
+ln -fs /usr/share/zoneinfo/Asia/jakarta /etc/localtime
 
 echo "[+] Download UDP-Custom"
 wget -q --show-progress "https://github.com/mandiriwe1/udp-custom/raw/main/udp-custom-linux-amd64" -O /root/udp/udp-custom
